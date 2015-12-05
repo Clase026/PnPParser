@@ -19,6 +19,7 @@ MINIMUM_10_CODE = "M10"
 CRITICAL_CODE = "CRIT"
 
 def parse_input(player_string):
+    """Takes any text a player inputs, and formats the output if they include the keywords ROLL or EFFECT"""
     caps_player_string = player_string.upper()
     roll_position = caps_player_string.find(ROLL_KEYWORD)
     effect_position = caps_player_string.find(EFFECT_KEYWORD)
@@ -60,6 +61,7 @@ def parse_input(player_string):
 
 
 def parse_roll(roll_text):
+    """Takes an uppercase string, rolls the appropiate dice and adds all modifiers, and returns the sum of the roll"""
     roll_text = roll_text.replace(" ","")
     rolls_total = 0
     critical_hit = False
@@ -83,6 +85,7 @@ def parse_roll(roll_text):
     return str(rolls_total)
 
 def resolve_naked_numbers(roll):
+    """Resolves multiplication between and integer and <= 1 die, resolves division between two numbers"""
     if "*" in roll:
         first_factor = roll.split("*")[0]
         second_factor = roll.split("*")[1]
@@ -99,6 +102,7 @@ def resolve_naked_numbers(roll):
     return roll
 
 def get_modifiers(roll, critical_hit):
+    """Reads a dice roll's string for modifiers, and returns a dictionary with those modifiers"""
     modifiers  = {"Advantage": False, "Disadvantage": False, "Lucky": False, "Great Weapon": False, "Brutal": 0,
                   "Critical": critical_hit, "Minimum Roll": 1}
     if ADVANTAGE_CODE in roll:
@@ -115,6 +119,7 @@ def get_modifiers(roll, critical_hit):
     return modifiers
 
 def resolve_modifiers(roll):
+    """Removes all modifiers from a roll. Should be called after get_modifiers"""
     roll.replace(ADVANTAGE_CODE,"")
     roll.replace(DISADVANTAGE_CODE,"")
     roll.replace(LUCKY_CODE,"")
@@ -124,6 +129,15 @@ def resolve_modifiers(roll):
     return roll
 
 def roll_dice(roll, modifiers):
+    """Rolls X number of Y kind of dice with modifiers Z, given a string of the form 'XDYZ'
+    Modifier effects:
+    Advantage: Makes the roll twice, and takes the higher of the two. Cancels out disadvantage
+    Disadvantage: Makes the roll twice, and takes the lower of the two. Cancels out advantage
+    Critical: Doubles the number of all the dice in the roll
+    Brutal: Increases the number of dice in the roll by the brutal rating
+    Lucky: Re-roll once dice that land on 1
+    Great Weapon: Re-roll once dice that land on 1 or 2
+    Minimum Roll: If the dice goes below this value, treat it as this value"""
     if modifiers["Advantage"] and not modifiers["Disadvantage"]:
         modifiers["Advantage"] = False
         return max(roll_dice(roll, modifiers), roll_dice(roll,modifiers))
